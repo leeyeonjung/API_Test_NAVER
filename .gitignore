@@ -1,0 +1,10 @@
+# pytest 캐시
+.pytest_cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# 환경 변수 파일 (민감 정보 포함)
+.env

@@ -1,0 +1,10 @@
+# 테스트 프레임워크
+pytest==8.3.4
+pytest-check==2.5.3
+pytest-html==4.1.1
+
+# HTTP 클라이언트
+requests==2.32.5
+
+# 환경 변수 관리
+python-dotenv==1.2.1
