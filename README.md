@@ -207,6 +207,3 @@ pytest testcase/test_api.py -v --log-cli-level=INFO
 - `.env` 파일이 프로젝트 루트 디렉토리에 있는지 확인
 - `.env` 파일의 변수 이름이 정확한지 확인 (대소문자 구분)
 - 따옴표 없이 값을 입력했는지 확인 (예: `ACCESS_TOKEN=abc123` ✅, `ACCESS_TOKEN="abc123"` ❌)
-
-### 코드에서 생성된 값이 따옴표로 저장되는 경우
-이미 수정되었습니다. `quote_mode="never"` 옵션을 사용하여 따옴표 없이 저장됩니다.
