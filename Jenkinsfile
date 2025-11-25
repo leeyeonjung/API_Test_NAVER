@@ -7,21 +7,11 @@ pipeline {
     }
 
     stages {
-        stage('Setup Python Env') {
+        stage('Run Windows API Test') {
             steps {
                 bat '''
-                    python -m venv venv
-                    call venv\\Scripts\\activate
-                    pip install -r requirements.txt
-                '''
-            }
-        }
-
-        stage('Run API Test') {
-            steps {
-                bat '''
-                    call venv\\Scripts\\activate
-                    pytest -v --disable-warnings --html=C:\\Automation\\API_Test_Naver\\Result\\test_report_%DATE:~0,4%%DATE:~5,2%%DATE:~8,2%_%TIME:~0,2%%TIME:~3,2%%TIME:~6,2%.html --self-contained-html
+                    cd C:\\Automation\\API_Test_Naver
+                    pytest -v --disable-warnings
                 '''
             }
         }
@@ -29,26 +19,25 @@ pipeline {
 
     post {
         always {
-            echo "📄 최신 HTML 리포트 찾는 중..."
+            echo "📄 최신 HTML 리포트 찾고 복사합니다..."
 
-            // 최신 파일 찾기 + 복사 (윈도우 CMD 방식)
             bat '''
                 set "REPORT_DIR=C:\\Automation\\API_Test_Naver\\Result"
 
-                REM 최신 HTML 리포트 파일 찾기
+                REM 최신 HTML 리포트 찾기 (최신순 정렬)
                 for /f "delims=" %%i in ('dir "%REPORT_DIR%\\test_report_*.html" /b /o:-d') do (
                     set "LATEST_REPORT=%%i"
                     goto COPY_FILE
                 )
 
                 :COPY_FILE
-                echo 최신 파일: %LATEST_REPORT%
+                echo 최신 파일 찾음: %LATEST_REPORT%
 
-                REM Prefix 붙여서 workspace로 복사
+                REM Jenkins workspace에 windows_ prefix 붙여서 복사
                 copy "%REPORT_DIR%\\%LATEST_REPORT%" "windows_%LATEST_REPORT%"
             '''
 
-            // Jenkins 아티팩트로 저장
+            // Jenkins artifact 저장
             archiveArtifacts artifacts: "windows_test_report_*.html", fingerprint: true
         }
     }
