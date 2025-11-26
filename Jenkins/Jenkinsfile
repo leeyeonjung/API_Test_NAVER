@@ -1,0 +1,72 @@
+pipeline {
+    agent none
+
+    stages {
+
+        /* -----------------------------------------------
+         * 1) Token Check + Refresh (Linux)
+         * ----------------------------------------------- */
+        stage('Check Token & Refresh') {
+            agent { label 'api_linux' }
+
+            environment {
+                NAVER_ACCESS_TOKEN  = credentials('api_access_token')
+                NAVER_REFRESH_TOKEN = credentials('api_refresh_token')
+
+                USER = credentials('jenkins-admin_USR')
+                PASS = credentials('jenkins-admin_PSW')
+            }
+
+            steps {
+                echo "🔍 Token Validate & Refresh on Linux"
+                sh 'bash Jenkins/ci/check_token_valid.sh'
+            }
+        }
+
+        /* -----------------------------------------------
+         * 2) Windows Test
+         * ----------------------------------------------- */
+        stage('Windows API Test') {
+            agent { label 'api_windows' }
+
+            environment {
+                NAVER_ACCESS_TOKEN  = credentials('api_access_token')
+                NAVER_REFRESH_TOKEN = credentials('api_refresh_token')
+            }
+
+            steps {
+                echo "🚀 Windows Pytest Run"
+                bat 'Jenkins\\ci\\windows_run.bat'
+            }
+
+            post {
+                always {
+                    archiveArtifacts artifacts: 'windows_test_report_*.html', fingerprint: true
+                }
+            }
+        }
+
+        /* -----------------------------------------------
+         * 3) Linux Test
+         * ----------------------------------------------- */
+        stage('Linux API Test') {
+            agent { label 'api_linux' }
+
+            environment {
+                NAVER_ACCESS_TOKEN  = credentials('api_access_token')
+                NAVER_REFRESH_TOKEN = credentials('api_refresh_token')
+            }
+
+            steps {
+                echo "🐧 Linux Pytest Run"
+                sh 'bash Jenkins/ci/linux_run.sh'
+            }
+
+            post {
+                always {
+                    archiveArtifacts artifacts: 'linux_test_report_*.html', fingerprint: true
+                }
+            }
+        }
+    }
+}
