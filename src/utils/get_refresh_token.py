@@ -2,6 +2,7 @@
 Refresh Token을 사용하여 새로운 Access Token 발급 스크립트
 """
 import os
+import json
 import requests
 from dotenv import load_dotenv
 from dotenv import set_key
@@ -42,7 +43,9 @@ def refresh_access_token(refresh_token: str = None):
     
     token_data = response.json()
     
-    # .env 파일에 새로운 Access Token 저장
+    # ----------------------------------------------------
+    # 1) .env 파일에 Access Token / Refresh Token 저장
+    # ----------------------------------------------------
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     env_path = os.path.join(base_dir, ".env")
     
@@ -50,15 +53,33 @@ def refresh_access_token(refresh_token: str = None):
         set_key(env_path, "ACCESS_TOKEN", token_data["access_token"], quote_mode="never")
         print(f"✓ New ACCESS_TOKEN saved to .env")
     
-    # Refresh Token도 갱신되었을 수 있음
     if "refresh_token" in token_data:
         set_key(env_path, "REFRESH_TOKEN", token_data["refresh_token"], quote_mode="never")
         print(f"✓ New REFRESH_TOKEN saved to .env")
+
+    # ----------------------------------------------------
+    # 2) token.json 파일로도 저장 (Jenkins에서 읽기 위함)
+    # ----------------------------------------------------
+    json_path = os.path.join(base_dir, "token.json")
     
+    with open(json_path, "w", encoding="utf-8") as jf:
+        json.dump(
+            {
+                "access_token": token_data.get("access_token"),
+                "refresh_token": token_data.get("refresh_token")
+            },
+            jf,
+            ensure_ascii=False,
+            indent=4
+        )
+    
+    print(f"✓ token.json created at: {json_path}")
+
     return token_data
 
 
 if __name__ == "__main__":
     token_data = refresh_access_token()
+
     print("\n✓ Successfully refreshed access token!")
-    print(f"New Access Token: {token_data.get('access_token', 'N/A')[:20]}...")
+    print(f"New Access Token (first 20 chars): {token_data.get('access_token', 'N/A')[:20]}...")
