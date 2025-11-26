@@ -16,6 +16,7 @@ echo "=== 4. Copy Latest Report ==="
 REPORT_DIR="/home/ubuntu/naver_api/API_Test_NAVER/Result"
 LATEST=$(ls -t $REPORT_DIR/test_report_*.html | head -n 1)
 
-cp "$LATEST" "linux_$(basename $LATEST)"
+# Jenkins 워크스페이스 루트로 복사
+cp "$LATEST" "$WORKSPACE/linux_$(basename $LATEST)"
 
 echo "Linux Run Complete"

@@ -17,6 +17,7 @@ for /f "delims=" %%i in ('dir "%REPORT_DIR%\test_report_*.html" /b /o:-d') do (
 )
 
 :COPY_FILE
-copy "%REPORT_DIR%\%LATEST%" "windows_%LATEST%"
+REM Jenkins 워크스페이스 루트로 복사
+copy "%REPORT_DIR%\%LATEST%" "%WORKSPACE%\windows_%LATEST%"
 
 echo Windows Run Complete
