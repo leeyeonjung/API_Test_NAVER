@@ -71,13 +71,13 @@ pipeline {
                             curl -X POST ^
                                 -u %USER%:%PASS% ^
                                 -H "Content-Type: application/json" ^
-                                -d "{ \\"credentials\\":{\\"scope\\":\\"GLOBAL\\", \\"id\\":\\"api_access_token\\", \\"secret\\":\\"${newAccess}\\", \\"\\$class\\":\\"org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl\\"} }" ^
+                                -d "{ \\"credentials\\":{\\"scope\\":\\"GLOBAL\\", \\"id\\":\\"api_access_token\\", \\"secret\\":\\"${newAccess}\\", \\"\\\$class\\":\\"org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl\\"} }" ^
                                 http://3.36.219.242:8080/credentials/store/system/domain/_/credential/api_access_token
 
                             curl -X POST ^
                                 -u %USER%:%PASS% ^
                                 -H "Content-Type: application/json" ^
-                                -d "{ \\"credentials\\":{\\"scope\\":\\"GLOBAL\\", \\"id\\":\\"api_refresh_token\\", \\"secret\\":\\"${newRefresh}\\", \\"\\$class\\":\\"org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl\\"} }" ^
+                                -d "{ \\"credentials\\":{\\"scope\\":\\"GLOBAL\\", \\"id\\":\\"api_refresh_token\\", \\"secret\\":\\"${newRefresh}\\", \\"\\\$class\\":\\"org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl\\"} }" ^
                                 http://3.36.219.242:8080/credentials/store/system/domain/_/credential/api_refresh_token
                         """
                     }
