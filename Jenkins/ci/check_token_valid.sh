@@ -14,7 +14,7 @@ RESULT=$(python3 src/utils/check_token.py)
 
 echo "Token Check Result: $RESULT"
 
-if [[ "$RESULT" == *"VALID"* ]]; then
+if [[ "$RESULT" == "VALID" ]]; then
     echo "🟢 Token is VALID"
     exit 0
 fi
