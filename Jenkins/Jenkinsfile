@@ -3,29 +3,33 @@ pipeline {
 
     stages {
 
-        /* -----------------------------------------------
-         * 1) Token Check + Refresh (Linux)
-         * ----------------------------------------------- */
+        /* 1) Token Check + Refresh (Linux) */
         stage('Check Token & Refresh') {
             agent { label 'api_linux' }
 
             environment {
                 NAVER_ACCESS_TOKEN  = credentials('api_access_token')
                 NAVER_REFRESH_TOKEN = credentials('api_refresh_token')
-
-                USER = credentials('jenkins-admin_USR')
-                PASS = credentials('jenkins-admin_PSW')
             }
 
             steps {
                 echo "🔍 Token Validate & Refresh on Linux"
-                sh 'bash Jenkins/ci/check_token_valid.sh'
+
+                withCredentials([usernamePassword(
+                    credentialsId: 'jenkins-admin',
+                    usernameVariable: 'USER',
+                    passwordVariable: 'PASS'
+                )]) {
+                    sh '''
+                        export USER="$USER"
+                        export PASS="$PASS"
+                        bash Jenkins/ci/check_token_valid.sh
+                    '''
+                }
             }
         }
 
-        /* -----------------------------------------------
-         * 2) Windows Test
-         * ----------------------------------------------- */
+        /* 2) Windows Test */
         stage('Windows API Test') {
             agent { label 'api_windows' }
 
@@ -35,7 +39,6 @@ pipeline {
             }
 
             steps {
-                echo "🚀 Windows Pytest Run"
                 bat 'Jenkins\\ci\\windows_run.bat'
             }
 
@@ -46,9 +49,7 @@ pipeline {
             }
         }
 
-        /* -----------------------------------------------
-         * 3) Linux Test
-         * ----------------------------------------------- */
+        /* 3) Linux Test */
         stage('Linux API Test') {
             agent { label 'api_linux' }
 
@@ -58,7 +59,6 @@ pipeline {
             }
 
             steps {
-                echo "🐧 Linux Pytest Run"
                 sh 'bash Jenkins/ci/linux_run.sh'
             }
 
