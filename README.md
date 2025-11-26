@@ -10,6 +10,8 @@ API_Test_Naver/
 ├── requirements.txt               # Python 패키지 의존성
 ├── .env                           # 환경 변수 파일 (민감 정보, Git 제외)
 ├── .env.example                   # 환경 변수 예시 파일
+├── token.json                     # 토큰 저장 파일 (민감 정보, Git 제외)
+├── token.json.example             # 토큰 파일 예시
 ├── .gitignore                     # Git 제외 파일 목록
 │
 ├── src/
@@ -18,10 +20,18 @@ API_Test_Naver/
 │   └── utils/
 │       ├── make_url.py            # 인증 URL 생성 스크립트
 │       ├── code_to_token.py       # Code → Token 변환 스크립트
-│       └── get_refresh_token.py   # Refresh Token으로 새 Token 발급 스크립트
+│       ├── get_refresh_token.py   # Refresh Token으로 새 Token 발급 스크립트
+│       └── check_token.py         # Access Token 유효성 검사 스크립트
 │
 ├── testcase/
 │   └── test_api.py                # 테스트 케이스 (pytest)
+│
+├── Jenkins/                       # Jenkins CI/CD 파이프라인
+│   ├── Jenkinsfile                # Jenkins 파이프라인 정의
+│   └── ci/
+│       ├── check_token_valid.sh   # Linux 토큰 검증 및 갱신 스크립트
+│       ├── linux_run.sh           # Linux 테스트 실행 스크립트
+│       └── windows_run.bat        # Windows 테스트 실행 스크립트
 │
 └── Result/                        # 테스트 리포트 저장 폴더 (자동 생성)
     └── test_report_*.html         # HTML 테스트 리포트
@@ -58,6 +68,21 @@ REFRESH_TOKEN=
 - Naver Developer Console(https://developers.naver.com/apps/#/register)에서 발급받은 실제 값들을 입력해야 합니다.
 - 값 입력 시 따옴표(`"`)를 사용하지 마세요. 예: `NAVER_CLIENT_ID=abc123` (올바름), `NAVER_CLIENT_ID="abc123"` (잘못됨)
 - 모든 민감 정보는 `.env` 파일에 저장되며, Git에 커밋되지 않습니다.
+
+### 3. 토큰 파일 설정 (선택사항)
+
+Jenkins CI/CD를 사용하는 경우, `token.json.example` 파일을 참고하여 `token.json` 파일을 생성할 수 있습니다:
+
+```json
+{
+    "access_token": "YOUR_ACCESS_TOKEN_HERE",
+    "refresh_token": "YOUR_REFRESH_TOKEN_HERE"
+}
+```
+
+**주의사항:**
+- `token.json` 파일은 Git에 커밋되지 않습니다 (`.gitignore`에 포함).
+- `get_refresh_token.py` 실행 시 자동으로 생성되므로 수동 생성은 선택사항입니다.
 
 ## 📖 사용 방법
 
@@ -99,29 +124,32 @@ python src/utils/get_refresh_token.py
 - `.env` 파일의 `REFRESH_TOKEN`을 사용하여 새 토큰 발급
 - 새 `ACCESS_TOKEN`이 `.env` 파일에 자동 저장됩니다
 - Refresh Token도 갱신된 경우 새 값으로 저장됩니다
+- Jenkins에서 사용하기 위해 `token.json` 파일도 자동 생성됩니다
 
-### 4. 테스트 실행
+### 4. Access Token 유효성 검사
+
+Access Token이 유효한지 확인합니다:
+
+```bash
+python src/utils/check_token.py
+```
+
+실행 시:
+- Jenkins Credential (`NAVER_ACCESS_TOKEN`) 또는 `.env` 파일의 `ACCESS_TOKEN`을 사용
+- 유효한 토큰이면 `VALID`, 만료되었거나 잘못된 토큰이면 `INVALID` 출력
+- Jenkins 파이프라인에서 자동으로 토큰 만료 여부를 확인하는 용도로 사용됩니다
+
+### 5. 테스트 실행
 
 #### 모든 테스트 실행
 
 ```bash
-pytest testcase/test_api.py -v --log-cli-level=INFO
-```
-
-#### 특정 테스트 실행 예시
-
-```bash
-# 사용자 프로필 조회 테스트
-pytest testcase/test_api.py::test_get_user_profile -v --log-cli-level=INFO
+pytest testcase/test_api.py
 ```
 
 #### HTML 리포트 생성
 
 테스트 실행 후 `Result/` 폴더에 HTML 리포트가 자동으로 생성됩니다.
-
-**테스트 옵션 설명:**
-- `-v` 또는 `--verbose`: 상세한 테스트 출력
-- `--log-cli-level=INFO`: 콘솔에 INFO 레벨 이상의 로그 출력 (테스트 내 `log.info()` 출력 확인용)
 
 ## 🧪 테스트 케이스
 
@@ -163,6 +191,32 @@ pytest testcase/test_api.py::test_get_user_profile -v --log-cli-level=INFO
 - 여러 검증 실패 시에도 테스트를 계속 진행하여 모든 실패를 한 번에 확인 가능
 - `check.equal()`, `check.is_not_none()`, `check.is_instance()` 등 사용
 
+## 🚀 Jenkins CI/CD
+
+프로젝트는 Jenkins를 통한 자동화된 CI/CD 파이프라인을 지원합니다.
+
+### 파이프라인 구조
+
+1. **Check Token & Refresh** (Linux Agent)
+   - Access Token 유효성 검사
+   - 만료된 경우 자동으로 Refresh Token으로 갱신
+   - Jenkins Credentials 자동 업데이트
+
+2. **Windows API Test** (Windows Agent)
+   - Windows 환경에서 API 테스트 실행
+   - 테스트 리포트 자동 아카이빙 (`windows_test_report_*.html`)
+
+3. **Linux API Test** (Linux Agent)
+   - Linux 환경에서 API 테스트 실행
+   - 테스트 리포트 자동 아카이빙 (`linux_test_report_*.html`)
+
+### Jenkins 설정 요구사항
+
+- **Credentials:**
+  - `api_access_token`: Naver Access Token
+  - `api_refresh_token`: Naver Refresh Token
+  - `jenkins-admin`: Jenkins 관리자 계정 (Credential 업데이트용)
+
 ## 📝 환경 변수 설명
 
 | 변수명 | 설명 | 필수 | 자동 생성 | 비고 |
@@ -179,6 +233,8 @@ pytest testcase/test_api.py::test_get_user_profile -v --log-cli-level=INFO
 
 - `.env` 파일은 Git에 포함되지 않습니다 (`.gitignore`에 포함)
 - `.env.example` 파일은 Git에 포함되어 예시로 사용됩니다
+- `token.json` 파일은 Git에 포함되지 않습니다 (`.gitignore`에 포함)
+- `token.json.example` 파일은 Git에 포함되어 예시로 사용됩니다
 - 실제 값들은 절대 Git에 커밋하지 마세요
 - 환경 변수 값 입력 시 따옴표를 사용하지 마세요
 
@@ -188,22 +244,3 @@ pytest testcase/test_api.py::test_get_user_profile -v --log-cli-level=INFO
 ```bash
 pip install -r requirements.txt
 ```
-
-## 🐛 문제 해결
-
-### Access Token이 만료된 경우
-`get_refresh_token.py` 스크립트를 실행하여 새 토큰을 발급받으세요:
-```bash
-python src/utils/get_refresh_token.py
-```
-
-### 테스트 실행 시 로그가 보이지 않는 경우
-`--log-cli-level=INFO` 옵션을 추가하세요:
-```bash
-pytest testcase/test_api.py -v --log-cli-level=INFO
-```
-
-### 환경 변수를 읽지 못하는 경우
-- `.env` 파일이 프로젝트 루트 디렉토리에 있는지 확인
-- `.env` 파일의 변수 이름이 정확한지 확인 (대소문자 구분)
-- 따옴표 없이 값을 입력했는지 확인 (예: `ACCESS_TOKEN=abc123` ✅, `ACCESS_TOKEN="abc123"` ❌)
