@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'web_windows' }
+    agent { label 'api_windows' }
 
     environment {
         NAVER_ACCESS_TOKEN  = credentials('api_access_token')
