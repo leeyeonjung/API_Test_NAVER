@@ -14,14 +14,14 @@ def test_get_user_profile(access_token):
     client = NaverAPIClient(access_token=access_token)
     profile = client.get_user_profile()
     log.info(f"Profile response: {profile}")
-    
+
     # 응답 검증
     check.is_in("resultcode", profile)
     check.is_in("message", profile)
-    
+
     # resultcode가 "00"이면 성공
     check.equal(profile["resultcode"], "00", msg=f"API call failed: {profile.get('message')}")
-    
+
     # 사용자 정보 확인
     check.is_in("response", profile)
     user_info = profile["response"]
