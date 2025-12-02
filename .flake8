@@ -1,0 +1,33 @@
+[flake8]
+# 최대 줄 길이
+max-line-length = 120
+
+# 무시할 에러 코드
+# E501: 줄 길이 초과 (max-line-length로 관리)
+# W503: 줄 바꿈 전 이항 연산자 (PEP 8 스타일)
+# E203: 화이트스페이스 관련 (리스트 인덱싱)
+# W391: 파일 끝 빈 줄 (많은 프로젝트에서 무시)
+ignore = E501, W503, E203, W391
+
+# 제외할 디렉토리/파일
+exclude =
+    .git,
+    __pycache__,
+    .pytest_cache,
+    .venv,
+    venv,
+    env,
+    build,
+    dist,
+    *.egg-info,
+    Result,
+    jenkins_test_repo
+
+# 포함할 파일 패턴
+per-file-ignores =
+    __init__.py:F401
+    conftest.py:F401
+
+# 통계 표시
+statistics = True
+
